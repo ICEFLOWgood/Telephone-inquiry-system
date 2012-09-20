@@ -5,13 +5,15 @@
 </head>
 <body>
      <center>
-	<table border =1>
+	<table bgcolor="#cccccc" border ="1" style="word-break:break-all; word-wrap:break-all;">
 		<tr>
 			<td>$message1</td><td>$message2</td><td>$message3</td><td>$message4</td><td>$message5</td><td>$message6</td><td>$message7</td>
 		</tr>
-		<tr>
-			<td>$info1</td><td>$info2</td><td>$info3</td><td>$info4</td><td>$info5</td><td>$info6</td><td>$info7</td>
-		</tr>
+		#for i in range(0,len($info),7)
+		     <tr>
+			<td>$info[i]</td><td>$info[i+1]</td><td>$info[i+2]</td><td>$info[i+3]</td><td>$info[i+4]</td><td>$info[i+5]</td><td>$info[i+6]</td>
+		     </tr>
+		#end for
 	</table>
      </center>
 </body>

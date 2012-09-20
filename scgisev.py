@@ -19,6 +19,7 @@ opt['first'] = check
 opt['add'] = add
 opt['del'] = dele
 opt['change'] = change
+opt['all'] = all_msg
 changeby = []
 def send():
 	connFd = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
@@ -49,6 +50,9 @@ class MyHandler(SCGIHandler):
 				opt['del'](env,bodysize,input,output)
 			elif  code == '/scgi-bin/change':
 				opt['change'](env,bodysize,input,output)
+			elif code == '/scgi-bin/all':
+				result = sql_object.select_all()
+				opt['all'](env,bodysize,input,output,result[1])
 		elif '?' in  code:
 			second_url = url[2].split('?')
 			if '&' in  code:
@@ -65,7 +69,8 @@ class MyHandler(SCGIHandler):
 					if select_res == None:
 						select_error(env,bodysize,input,output)
 					else:
-						result = select_res.split('\\')	
+						result1 = select_res.split('\\')	
+						result = result1[:-1]
 						select_finsh(env,bodysize,input,output,result)
 				if second_url[0] == 'add':#添加
 					if alist[0]=='' or alist[1]=='' or alist[2]=='' or alist[6]=='':
@@ -74,22 +79,32 @@ class MyHandler(SCGIHandler):
 						row = sql_object.add(alist[0],alist[1],alist[2],alist[3],alist[4],alist[5],alist[6])
 						if row >0:
 							add_finsh(env,bodysize,input,output)
-							sql_object.reload_sql()
+							sql_object.reload_sql()#数据库重载
 							try:
-						   		send()
+						   		send()#数据变化包
 							except socket.error:
 						   		print '请检查TCP server是否开启'
 				if second_url[0] == 'del':#删除
-					row1 = sql_object.delete(alist[0])
-					if row1>0:
-						dele_finsh(env,bodysize,input,output)
-						sql_object.reload_sql()
-						try:
-						   send()
-						except socket.error:
-						   print '请检查TCP server是否开启'
+					if len(alist)>2:
+						row1 = sql_object.delete(alist[0])
+						if row1>0:
+							dele_finsh(env,bodysize,input,output)
+							sql_object.reload_sql()
+							try:
+						   	   send()
+							except socket.error:
+						   	   print '请检查TCP server是否开启'
+						else:
+							dele_error(env,bodysize,input,output)	
 					else:
-						dele_error(env,bodysize,input,output)	
+						select_res = sql_object.select(alist[0])
+                                        	if select_res == None:
+                                               		select_error(env,bodysize,input,output)
+						else:
+							result1 = select_res.split('\\')
+                                                	result = result1[:-1]
+							del_begin(env,bodysize,input,output,result)
+
 				if second_url[0] == 'change':#改变
 					if len(alist)>2:
 					       if alist[1]=='' or alist[2]=='' or alist[3]=='' or alist[7]=='':
@@ -106,13 +121,23 @@ class MyHandler(SCGIHandler):
 							else:
 								change_error(env,bodysize,input,output)			
 				        else:
-						select_res = sql_object.select(alist[0])
-                                        	if select_res == None:
-                                               		select_error(env,bodysize,input,output)
+						if alist[0] == 'want_to_change':
+							select_res = sql_object.select(alist[1])
+							result1 = select_res.split('\\')
+							result = result1[:-1]
+							result.append(alist[1])
+							change_on(env,bodysize,input,output,result)
 						else:
-                                               		result = select_res.split('\\')
-							result.append(alist[0])
-                                               		change_on(env,bodysize,input,output,result)
+							select_res = sql_object.select(alist[0])
+							print select_res
+                                        		if select_res == None:
+                                               			select_error(env,bodysize,input,output)
+							else:
+                                               			result1 = select_res.split('\\')
+								result = result1[:-1]
+					#			result.append(alist[0])
+                                               			#change_on(env,bodysize,input,output,result)
+								change_begin(env,bodysize,input,output,result)
 			except MySQLdb.IntegrityError,e:
 				if e[0] == 1062:#数据库错误代号1062为重复添加
 				   add_error(env,bodysize,input,output,e[1].split('\'')[1])#把错误内容发送到网页
