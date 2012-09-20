@@ -108,7 +108,7 @@ int test()//测试函数；
 }
 
 //free the memory of the hash table
-void hash_table_release()
+void hash_table_release()//重载hash表数据之前，释放之前hash表资源；
 {
     int i;
     for(i = 0; i < HASH_TABLE_MAX_SIZE; ++i)
@@ -132,13 +132,13 @@ void hash_table_release()
 }
 
 
-int update_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
+int update_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)//重载hash表；
 {
     hash_table_release();
     init_hash_table(DBName, DBUserName, DBUserPassword);
 }
 
-int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
+int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)//初始化hash表；
 {
     char mysql_server_ip[] = "172.16.20.50";
 /*    char mysqlDB_name[] = "Telephone";
@@ -149,8 +149,10 @@ int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
     char*mysql_name = DBUserName;
     char*mysql_password = DBUserPassword;
 //printf("DB %s,DBu %s,DBp %s\n", mysqlDB_name,mysql_name,mysql_password);
-    hash_table_init();
-    mysql_init(&my_connection);
+
+    hash_table_init();//初始化哈希表大小和哈希数组；
+    mysql_init(&my_connection);//初始化MYSQL结构；
+    //数据库的连接；
     if(mysql_real_connect(&my_connection, 
                             mysql_server_ip, 
                             mysql_name,
@@ -161,7 +163,7 @@ int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
                             0))
     {
         printf("Connection success\n");
-        res = mysql_query(&my_connection, "select * from staffs");
+        res = mysql_query(&my_connection, "select * from staffs");//查询数据库信息；
         if(res)
         {
             printf("select error:%s\n", mysql_error(&my_connection));
@@ -169,10 +171,10 @@ int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
         }
         else
         {
-            res_ptr = mysql_store_result(&my_connection);
+            res_ptr = mysql_store_result(&my_connection);//将检索到的数据储存到本地
             if(res_ptr)
             {
-                printf("Retrieved %lu rows\n", (unsigned long)mysql_num_rows(res_ptr));
+                printf("Retrieved %lu rows\n", (unsigned long)mysql_num_rows(res_ptr));//打印取回多少行；
                 display_header();
                 if(mysql_errno(&my_connection))
                 {
@@ -180,7 +182,7 @@ int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
                     return -1;
                 }
             }
-            mysql_free_result(res_ptr);
+            mysql_free_result(res_ptr);//释放资源；
         }
         mysql_close(&my_connection);
         printf("Connection closed.\n");
@@ -191,28 +193,27 @@ int init_hash_table(char*DBName, char*DBUserName, char*DBUserPassword)
         if(mysql_errno(&my_connection))
         {
             fprintf(stderr,"Connection error %d:%s\n", 
-                                        mysql_errno(&my_connection), 
-                                        mysql_error(&my_connection));
+                                        mysql_errno(&my_connection), //错误消息编号；
+                                        mysql_error(&my_connection));//返回包含错误消息的、由NULL终结的字符串；
             return -1;
         }
     }
     return 0;
 }
 
-void display_header()//初始化哈希表；
+void display_header()//建立哈希表；
 {
-    MYSQL_FIELD*field_ptr;
     unsigned int num_fields;
     unsigned int i;
     MYSQL_ROW row;
     INFOR* NewInfor;
-    num_fields = mysql_num_fields(res_ptr);
-    field_ptr = mysql_fetch_field(res_ptr);
-    while(row = mysql_fetch_row(res_ptr))
+    
+    num_fields = mysql_num_fields(res_ptr);//返回结果集合中字段的数；
+    while(row = mysql_fetch_row(res_ptr))//检索集合并且返回下一行；
     {
-        for(i=1; i<num_fields; i++)
+        for(i=1; i<num_fields; i++)//循环给每一行的每一个字段的信息进行hash计算，放入hash表；
         {  
-            NewInfor = malloc(sizeof(INFOR));
+            NewInfor = malloc(sizeof(INFOR));//给新的节点分配内存空间；
             memset(NewInfor, 0, sizeof(INFOR));
         
             strcpy(NewInfor->myname, row[1]?row[1]:"NULL");
@@ -254,7 +255,10 @@ void hash_table_insert(const char* skey, INFOR* nvalue)//向哈希表中插入�
     //在hash表数组下标下建立链表；
     HashNode* pNewNode = (HashNode*)malloc(sizeof(HashNode));
     memset(pNewNode, 0, sizeof(HashNode));
-    pNewNode->sKey = (char*)malloc(sizeof(char)*(strlen(skey)+1));
+    
+    pNewNode->sKey = (char*)malloc(sizeof(char)*(strlen(skey)+1));//为结构体中的sKey分配空间；
+    memset(pNewNode->sKey, 0, sizeof(char)*(strlen(skey)+1));
+    
     strcpy(pNewNode->sKey, skey);
     pNewNode->infor = nvalue;
     pNewNode->pNext = hashTable[pos];
@@ -263,7 +267,7 @@ void hash_table_insert(const char* skey, INFOR* nvalue)//向哈希表中插入�
     hash_table_size++;
 }
 
-HashNode* hn[64] = {0};
+HashNode* hn[64] = {0};//存储符合条件的节点的地址；
 HashNode** hash_table_lookup(const char* skey)//查找哈希表数据；
 {
     int i = 0;
@@ -272,7 +276,7 @@ HashNode** hash_table_lookup(const char* skey)//查找哈希表数据；
     if(hashTable[pos])
     {
         HashNode* pHead = hashTable[pos];
-        while(pHead)
+        while(pHead)//查找下标相同的所有节点；
         {
             if(strcmp(skey, pHead->sKey) == 0)
             {
@@ -281,7 +285,7 @@ HashNode** hash_table_lookup(const char* skey)//查找哈希表数据；
             }
             pHead = pHead->pNext;
         }
-        if(pHead == NULL)
+        if(pHead == NULL)//如果查到链表尾部，返回数组；
         {
           return hn;
         }
