@@ -53,7 +53,7 @@ int main()//测试函数；
 */
 
 //free the memory of the hash table
-void hash_table_release()
+void hash_table_release()//重载hash表数据之前，释放之前hash表资源；
 {
     int i;
     for(i = 0; i < HASH_TABLE_MAX_SIZE; ++i)
@@ -77,14 +77,14 @@ void hash_table_release()
 }
 
 
-int update_hash_table()
+int update_hash_table()//重载hash表；
 {
     hash_table_release();
     init_hash_table();
     return 0;
 }
 
-int init_hash_table()
+int init_hash_table()//初始化hash表；
 {
     char mysql_server_ip[] = "172.16.20.50";
     char mysqlDB_name[] = "Telephone";
@@ -104,7 +104,7 @@ int init_hash_table()
                             0))
     {
         printf("Database connection success\n");
-        res = mysql_query(&my_connection, "select * from staffs");
+        res = mysql_query(&my_connection, "select * from staffs");//查询数据库信息；
         if(res)
         {
             printf("database select error:%s\n", mysql_error(&my_connection));
@@ -112,18 +112,18 @@ int init_hash_table()
         }
         else
         {
-            res_ptr = mysql_store_result(&my_connection);
+            res_ptr = mysql_store_result(&my_connection);//将检索到的数据储存到本地；
             if(res_ptr)
             {
                 printf("Retrieved %lu rows\n", (unsigned long)mysql_num_rows(res_ptr));//打印取回多少行；
-                display_header();//建立哈希表；
+                display_header();//建立哈希表功能函数；
                 if(mysql_errno(&my_connection))
                 {
                     fprintf(stderr, "Retrive error:%s\n", mysql_error(&my_connection));
                     return -1;
                 }
             }
-            mysql_free_result(res_ptr);
+            mysql_free_result(res_ptr);//释放资源；
         }
         mysql_close(&my_connection);
         printf("Database connection closed.\n");
@@ -149,12 +149,12 @@ void display_header()//建立哈希表；
     MYSQL_ROW row;
     INFOR* NewInfor;
     
-    num_fields = mysql_num_fields(res_ptr);
-    while(row = mysql_fetch_row(res_ptr))
+    num_fields = mysql_num_fields(res_ptr);//返回结果集合中字段的数；
+    while(row = mysql_fetch_row(res_ptr))//检索集合并且返回下一行；
     {   
-        for(i=1; i<num_fields; i++)
+        for(i=1; i<num_fields; i++)//循环给每一行的每一个字段的信息进行hash计算，放入hash表；
         {
-            NewInfor = malloc(sizeof(INFOR));
+            NewInfor = malloc(sizeof(INFOR));//给新的节点分配内存空间；
             memset(NewInfor, 0, sizeof(INFOR));
             
             strcpy(NewInfor->myname, row[1]?row[1]:"NULL");
@@ -165,37 +165,40 @@ void display_header()//建立哈希表；
             strcpy(NewInfor->extension, row[6]?row[6]:"NULL");
             strcpy(NewInfor->emall, row[7]?row[7]:"NULL");
             
-            hash_table_insert(row[i]?row[i]:"NULL", NewInfor);//给每一列进行hash算法，插入hash表；
+            hash_table_insert(row[i]?row[i]:"NULL", NewInfor);//给每一行的每一列进行hash算法，插入hash表；
         }
     }
 }
 
 void hash_table_insert(const char* skey, INFOR* nvalue)//向哈希表中插入元素；
 {
-    if(hash_table_size >= HASH_TABLE_MAX_SIZE)
+    if(hash_table_size >= HASH_TABLE_MAX_SIZE)//当hash表内容个数大与最大hash表容量时提示；
     {
         printf("Out of hash table memory!\n");
         return;
     }
     
-    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;
+    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;//计算hash下标；
     HashNode* pHead = hashTable[pos];
     while(pHead)
     {   
-        if(skey[0] == '\0')
+        if(skey[0] == '\0')//如果skey为空，则跳出；
         {
             return;
         }
-        if(strcmp(pHead->sKey, skey) == 0 && strcmp(pHead->infor->emall, nvalue->emall) == 0)
+        if(strcmp(pHead->sKey, skey) == 0 && strcmp(pHead->infor->emall, nvalue->emall) == 0)//判断是否为同名同人，邮箱为唯一的；
         {
             printf("%s already exists!\n", skey);
             return;
         }
         pHead = pHead->pNext;
     }
-    HashNode* pNewNode = (HashNode*)malloc(sizeof(HashNode));
+    HashNode* pNewNode = (HashNode*)malloc(sizeof(HashNode));//为hash结构分配空间；
     memset(pNewNode, 0, sizeof(HashNode));
-    pNewNode->sKey = (char*)malloc(sizeof(char)*(strlen(skey)+1));
+    
+    pNewNode->sKey = (char*)malloc(sizeof(char)*(strlen(skey)+1));//为结构体中的sKey分配空间；
+    memset(pNewNode->sKey, 0, sizeof(char)*(strlen(skey)+1));
+    
     strcpy(pNewNode->sKey, skey);
     pNewNode->infor = nvalue;
     pNewNode->pNext = hashTable[pos];
@@ -204,7 +207,7 @@ void hash_table_insert(const char* skey, INFOR* nvalue)//向哈希表中插入�
     hash_table_size++;
 }
 
-HashNode* hn[64] = {0};
+HashNode* hn[64] = {0};//存储符合条件的节点的地址；
 HashNode** hash_table_lookup(char* skey)//查找哈希表数据；
 {
 
@@ -219,19 +222,19 @@ HashNode** hash_table_lookup(char* skey)//查找哈希表数据；
     }
     i = 0;
     memset(hn, 0, sizeof(hn));
-    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;
+    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;//计算hash下标；
     if(hashTable[pos])
     {
         HashNode* pHead = hashTable[pos];
-        while(pHead)
+        while(pHead)//查找下标相同的所有节点；
         {          
             if(strcmp(skey, pHead->sKey) == 0)
             {
-                hn[i++] = pHead;
+                hn[i++] = pHead;//将匹配的节点地址保存到数组；
             }
             pHead = pHead->pNext;
         }
-        if(pHead == NULL)
+        if(pHead == NULL)//如果查到链表尾部，返回数组；
         {
             return hn;
         }
