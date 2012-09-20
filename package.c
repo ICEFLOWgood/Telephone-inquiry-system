@@ -124,32 +124,6 @@ static PyObject* hash_hash_table_lookup(PyObject*self, PyObject*args)
     }
     retu = (PyObject*)Py_BuildValue("s", str);
     
-	
-	/*
-    PyObject*pList = PyList_New(10);
-    assert(PyList_Check(pList));
-  printf("##################\t%s\n", result->infor->myname);
-    PyList_Append(pList, Py_BuildValue("s", result->infor->myname));
-  printf("##################\t%s\n", result->infor->abbreviation); 
-    PyList_Append(pList, Py_BuildValue("s", result->infor->abbreviation)); 
-  printf("##################\t%s\n", result->infor->full); 
-    PyList_Append(pList, Py_BuildValue("s", result->infor->full));
-  printf("##################\t%s\n", result->infor->company);
-    PyList_Append(pList, Py_BuildValue("s", result->infor->company));
-  printf("##################\t%s\n", result->infor->privation);
-    PyList_Append(pList, Py_BuildValue("s", result->infor->privation));
-  printf("##################\t%s\n", result->infor->extension);
-    PyList_Append(pList, Py_BuildValue("s", result->infor->extension));
-  printf("##################\t%s\n", result->infor->emall);
-    PyList_Append(pList, Py_BuildValue("s", result->infor->emall));
-PyObject* pValue = PyList_GetItem(pList, 1);
-char* test;
-PyArg_ParseTuple(pValue, "s", &test);
-printf("********************************\n");
-printf("*************%s\n", test);
-printf("********************************\n");
-*/
- //   return (PyObject*)pList;
     return retu;
 }
 
