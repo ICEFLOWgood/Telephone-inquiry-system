@@ -85,14 +85,14 @@ void read_cb(struct bufferevent*bev, void*arg)//循环读取套接字里的内�
     memset(&qa_head, 0, sizeof(QA_HEAD));
     qa_head.package_len = 232;
     qa_head.package_id = 11;
-    HashNode **getinfo;
+    HashNode **getinfo;//储存查询结果信息；
     int n;
-    int i=0;
+    int i=0; 
     
     char *buf = malloc(sizeof(QA_HEAD)+4096);
     
     evutil_socket_t fd = bufferevent_getfd(bev);//获取套接字描述符；
-    while(n = bufferevent_read(bev, line, MAX_LINE), n>0)//循环读取套接字中的内容，直到读取完毕；
+    while(n = bufferevent_read(bev, line, MAX_LINE), n>0)//读取套接字中的内容；
     {
         head = (QR_HEAD*)line;
         
@@ -101,11 +101,11 @@ void read_cb(struct bufferevent*bev, void*arg)//循环读取套接字里的内�
         printf("fd = %u, readline:%s", fd, (char*)(line+sizeof(QR_HEAD)));
         if(head->package_id == 9)//检测是不是reload包，通知重载hash表；
         {
-            update_hash_table();
+            update_hash_table();//重载hash表内容；
             continue;
         }
         getinfo = hash_table_lookup(line+sizeof(QA_HEAD));//查询hash表;
-        if(getinfo == NULL)
+        if(getinfo == NULL)//如果没有查询到响应的信息，设置包长度为包头长度；
         {
             qa_head.package_len = 8;
             memcpy(buf, &qa_head, sizeof(QA_HEAD));
@@ -113,7 +113,7 @@ void read_cb(struct bufferevent*bev, void*arg)//循环读取套接字里的内�
         else
         {
             i = 0;
-            while(getinfo[i])
+            while(getinfo[i])//循环往包里添加查询到的数据；
             {
                 memcpy(buf+sizeof(QA_HEAD)+i*sizeof(INFOR), getinfo[i]->infor, sizeof(INFOR));
                 i++;
@@ -121,7 +121,7 @@ void read_cb(struct bufferevent*bev, void*arg)//循环读取套接字里的内�
             qa_head.package_len = sizeof(QA_HEAD)+i*sizeof(INFOR);
             memcpy(buf, &qa_head, sizeof(QA_HEAD));
         }
-        bufferevent_write(bev, buf, sizeof(QA_HEAD)+4096);
+        bufferevent_write(bev, buf, sizeof(QA_HEAD)+4096);//发包；
     }
 }
 
@@ -141,5 +141,5 @@ void error_cb(struct bufferevent *bev, short event, void*arg)//异常处理函�
     {
         printf("some other error\n");
     }
-    bufferevent_free(bev);
+    bufferevent_free(bev);//释放资源；
 }
