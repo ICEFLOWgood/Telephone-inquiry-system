@@ -34,8 +34,8 @@ int function()
     seraddr.sin_family = AF_INET;
     seraddr.sin_port = htons(5000);
     inet_pton(AF_INET, "172.16.18.100", &seraddr.sin_addr.s_addr);//字节序转换；
-   // seraddr.sin_port = htons(8000);
-    //inet_pton(AF_INET, "172.16.16.10", &seraddr.sin_addr.s_addr);//字节序转换；
+    //seraddr.sin_port = htons(8000);
+   // inet_pton(AF_INET, "172.16.16.10", &seraddr.sin_addr.s_addr);//字节序转换；
     
     ret = connect(sockfd, (struct sockaddr*)&seraddr, sizeof(seraddr));//连接；
     if(ret != 0)
@@ -43,7 +43,7 @@ int function()
         perror("connect error\n");
         return -1;
     }
-    
+    printf("与服务器连接成功！\n");
     ret = pthread_create(&tid1, NULL, write_ser, NULL);//创建往socket套接字写信息的线程；
     if(ret != 0)
     {
@@ -75,6 +75,7 @@ void *write_ser()//写数据的线程函数；
     int ret = -1;
     //循环往套接字里写入数据；
     fflush(stdin);
+    printf("查找支持：中文名、简拼、全拼、公司手机号、私人号码、分机号、邮箱！\n退出系统请输入：quit\n");
     printf("input message:");
     while(1)
     {
@@ -87,6 +88,10 @@ void *write_ser()//写数据的线程函数；
         if(ret == -1)
         {   
             perror("write_ser read error\n");
+            exit(0);
+        }
+        if(strncmp(data, "quit", sizeof("quit")-1)==0)
+        {
             exit(0);
         }
         fflush(stdout);
@@ -131,7 +136,7 @@ void unpackage(char*buf)//解析查询结果数据包；
     QA_HEAD* change_buf;
     int number;//传回的信息的条数；
     change_buf = (QA_HEAD*)buf;
-  printf("\n******len %d\n******id %d\n", change_buf->package_len, change_buf->package_id);
+ // printf("\n******len %d\n******id %d\n", change_buf->package_len, change_buf->package_id);
     if(change_buf->package_id != 11)
     {
         return;
@@ -146,7 +151,7 @@ void unpackage(char*buf)//解析查询结果数据包；
         
         while(number--)
         {
-            printf("你要查询的信息如下:\n姓名：%s\n简拼：%s\n全拼：%s\n公司电话：%s\n私人电话：%s\n分机号：%s\nemall：%s\n",
+            printf("你要查询的信息如下:\n姓名：%s\n简拼：%s\n全拼：%s\n公司电话：%s\n私人电话：%s\n分机号：%s\nEmail：%s\n",
                                 ((INFOR*)(buf+sizeof(QA_HEAD)+number*224))->myname,
                                 ((INFOR*)(buf+sizeof(QA_HEAD)+number*224))->abbreviation,
                                 ((INFOR*)(buf+sizeof(QA_HEAD)+number*224))->full,
@@ -158,7 +163,7 @@ void unpackage(char*buf)//解析查询结果数据包；
         }
         
     }
-            
+    printf("查找支持：中文名、简拼、全拼、公司手机号、私人号码、分机号、邮箱！\n退出系统请输入：quit\n");
     printf("input message:");//提示输入数据；
     fflush(stdout);
 }
