@@ -49,7 +49,8 @@ try:
 				for val in check_rel:
 					tem.append(struct.pack('32s',val))#把每个返回结果都打包成32个字节
 				send_val = ''.join(tem)#把列表整合成字符串
-				backmsg[fileno] = struct.pack('ii224s',232,11,send_val)
+				pack_size = 32*(len(check_rel)-1)
+				backmsg[fileno] = struct.pack('ii'+str(pack_size)+'s',8+pack_size,11,send_val)
 				epoll.modify(fileno, select.EPOLLOUT | select.EPOLLET)
 			else:
 				backmsg[fileno] = struct.pack('ii224s',8,11,'\0')
